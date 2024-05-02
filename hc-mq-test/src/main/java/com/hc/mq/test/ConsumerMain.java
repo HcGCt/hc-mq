@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @Author hc
  */
-public class Main {
+public class ConsumerMain {
 
     public static void main(String[] args) throws Exception {
         List<IConsumer> consumerList = Arrays.asList(new DemoConsumer1(), new DemoConsumer2());

@@ -2,14 +2,10 @@ package com.hc.mq.server.core;
 
 import com.hc.mq.client.message.Message;
 import com.hc.mq.client.message.MessageQueue;
+import com.hc.mq.server.core.config.MqServerConfig;
 import com.hc.mq.server.core.disk.DefaultMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,44 +15,42 @@ import static com.hc.mq.server.core.memo.MemoData.*;
 /**
  * @Author hc
  */
-@Component
-public class MqManager implements InitializingBean, DisposableBean {
-    private static Logger logger = LoggerFactory.getLogger(MqManager.class);
+public class Broker {
+    private static Logger logger = LoggerFactory.getLogger(Broker.class);
 
-    @Value("${hc.mq.server.ip}")
     private String ip;
-
-    @Value("${hc.mq.server.port}")
     private int port;
+    // ------------ 持久化 -------------
+    private DefaultMessageStore messageStore;
+
+    private Broker() {
+        ip = MqServerConfig.getInstance().getIp();
+        port = MqServerConfig.getInstance().getPort();
+        messageStore = DefaultMessageStore.getInstance();
+    }
+
+    private static Broker instance = new Broker();
+
+    public static Broker init() {
+        return instance;
+    }
+
 
     // ------------- 服务器开关 -------------
-    // bean声明周期:销毁
-    @Override
-    public void destroy() throws Exception {
-        stopServer();
-    }
 
-    // bean生命周期:(非自定义)初始化
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        startServer();
-    }
-
-    public void startServer() throws Exception {
+    public Broker start() throws Exception {
         Server server = Server.getInstance();
         server.init(ip, port).start();
         startThreadPool();
+        return instance;
     }
 
-    public void stopServer() throws Exception {
+    public void stop() throws Exception {
         Server server = Server.getInstance();
         server.stop();
         stopThreadPool();
     }
 
-    // ------------ 持久化 -------------
-    @Autowired
-    private DefaultMessageStore messageStore;
 
     // ------------- 服务端线程 ------------
     private ExecutorService executorService = Executors.newCachedThreadPool();

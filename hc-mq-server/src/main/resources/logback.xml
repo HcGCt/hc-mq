@@ -20,7 +20,7 @@
             </pattern>
         </encoder>
     </appender>
-<!--    <logger name="com.hc.rpc" level="OFF" />-->
+    <logger name="com.hc.rpc" level="OFF" />
     <root level="all">
         <appender-ref ref="file"/>
     </root>

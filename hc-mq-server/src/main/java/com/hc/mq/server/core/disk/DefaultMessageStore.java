@@ -4,11 +4,9 @@ import com.hc.mq.client.common.MqException;
 import com.hc.mq.client.message.Message;
 import com.hc.mq.client.message.MessageQueue;
 import com.hc.mq.client.util.BinaryUtil;
+import com.hc.mq.server.core.config.MqServerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -22,11 +20,21 @@ import static com.hc.mq.client.common.Constants.*;
 /**
  * @Author hc
  */
-@Lazy
-@Component
 public class DefaultMessageStore implements IMessageStore {
 
     private static Logger logger = LoggerFactory.getLogger(DefaultMessageStore.class);
+
+    private int maxMessages;
+    private double validMessageRatio;
+
+    private static volatile DefaultMessageStore instance = new DefaultMessageStore();
+    private DefaultMessageStore(){
+        maxMessages = MqServerConfig.getInstance().getMaxMessages();
+        validMessageRatio = MqServerConfig.getInstance().getValidMessageRatio();
+    }
+    public static DefaultMessageStore getInstance() {
+        return instance;
+    }
 
     @Override
     public void createQueueFiles(String queueName) throws IOException {
@@ -122,10 +130,6 @@ public class DefaultMessageStore implements IMessageStore {
         }
     }
 
-    @Value("${hc.mq.server.maxMessages:2000}")
-    private int maxMessages;
-    @Value("${hc.mq.server.validMessageRatio:0.3}")
-    private double validMessageRatio;
     @Override
     public boolean isNeedClean(String queueName) {
         // 当文件中消息总数超过2k, 但有效消息不足30%则进行清理

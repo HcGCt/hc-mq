@@ -9,10 +9,8 @@ import com.hc.mq.client.message.MessageQueue;
 import com.hc.mq.client.util.BinaryUtil;
 import com.hc.mq.client.util.UniqueIdGenerator;
 import com.hc.mq.server.core.disk.DefaultMessageStore;
-import com.hc.mq.server.util.SpringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -23,7 +21,6 @@ import static com.hc.mq.server.core.memo.MemoData.*;
 /**
  * @Author hc
  */
-@Component
 public class MqServiceImpl implements IMqService {
 
     private static Logger logger = LoggerFactory.getLogger(MqServiceImpl.class);
@@ -31,7 +28,7 @@ public class MqServiceImpl implements IMqService {
     private DefaultMessageStore messageStore;
 
     public MqServiceImpl() {
-        messageStore = SpringUtils.getBean(DefaultMessageStore.class);
+        messageStore = DefaultMessageStore.getInstance();
     }
 
     @Override

@@ -34,7 +34,7 @@ public class Server {
         providerFactory.setServerPort(port);
         // providerFactory.setRegisterAddress();        // 注册中心todo
         // providerFactory.setRegisterType();
-        System.out.println("添加服务");
+        // brokerName
         providerFactory.addService(IMqService.class.getSimpleName(),"1.0", new MqServiceImpl());
 
         return this;
