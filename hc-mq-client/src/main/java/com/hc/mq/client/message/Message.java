@@ -9,6 +9,7 @@ import java.io.Serializable;
  * @Author hc
  */
 public class Message implements Serializable {
+    // todo 唯一有序Id
     private String msgId;
     // 消息主题
     private String topic;

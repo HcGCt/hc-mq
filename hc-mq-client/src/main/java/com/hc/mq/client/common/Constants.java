@@ -12,9 +12,6 @@ public class Constants {
     public static final String TRANSACTION_TOPIC = "transaction_topic";
     public static final String TRANSACTION_QUEUE = "transaction_queue";
 
-    public static final int COMMON_RESULT_SUCCESS_CODE = 200;
-    public static final int COMMON_RESULT_FAIL_CODE = 500;
-
 
     public static final String DEFAULT_MESSAGE_STORE_PATH = "./message-store/";
     public static final String DEFAULT_MESSAGE_DATA_STORE_PATH = "/queue_data.log";
