@@ -1,4 +1,4 @@
-package com.hc.mq.server.util;
+package com.hc.mq.dashboard.util;
 
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.BeansException;

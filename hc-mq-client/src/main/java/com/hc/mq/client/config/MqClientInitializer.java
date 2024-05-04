@@ -59,7 +59,7 @@ public class MqClientInitializer {
     private void init() {
         if (clientFactory == null) {
             clientFactory = new ClientFactory();
-            clientFactory.setServerAddress(MqClientConfig.getInstance().getServerAddress());
+            // clientFactory.setServerAddress(MqClientConfig.getInstance().getServerAddress());
         }
     }
 }

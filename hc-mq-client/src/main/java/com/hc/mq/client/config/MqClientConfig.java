@@ -11,7 +11,8 @@ import static com.hc.mq.client.common.Constants.DEFAULT_CLIENT_CONFIG_PREFIX;
  */
 public class MqClientConfig {
     // 配置参数
-    private String serverAddress = "127.0.0.1:7777";
+    private String serverAddress = "127.0.0.1:9090";
+    private String registryAddress = "127.0.0.1:8080";
 
     private static volatile MqClientConfig instance;
     private MqClientConfig(){}
@@ -32,5 +33,9 @@ public class MqClientConfig {
 
     public String getServerAddress() {
         return serverAddress;
+    }
+
+    public String getRegistryAddress() {
+        return registryAddress;
     }
 }

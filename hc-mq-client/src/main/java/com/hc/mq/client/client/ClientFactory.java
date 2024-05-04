@@ -46,13 +46,13 @@ public class ClientFactory {
 
         referenceBean = new RpcReferenceBean();
         referenceBean.setCallType(CallType.SYNC);
-        referenceBean.setService(IMqService.class);
+        // referenceBean.setService(IMqService.class);
         referenceBean.setVersion("1.0");
         referenceBean.setServerAddress(serverAddress);
         referenceBean.setTimeout(30000000);     // todebug
         referenceBean.setInvokeCallback(null);
         try {
-            client = (IMqService) referenceBean.getObject();
+            client = referenceBean.getObject(IMqService.class);
         } catch (Exception e) {
             logger.error("获取IClient失败：{}", e.getMessage());
             throw new RuntimeException(e);

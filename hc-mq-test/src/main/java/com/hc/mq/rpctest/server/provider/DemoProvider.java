@@ -12,6 +12,7 @@ public class DemoProvider {
     public static void main(String[] args) {
         RpcProviderFactory providerFactory = new RpcProviderFactory();
         providerFactory.setServerPort(7777);
+        // providerFactory.setRegisterType("admin");
         providerFactory.addService(DemoService.class.getSimpleName(), null, new DemoServiceImpl());
 
         providerFactory.start();

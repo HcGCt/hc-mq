@@ -15,6 +15,8 @@ public class MqServerConfig {
     private Integer maxMessages = 2000;             // 队列最大容量
     private Double validMessageRatio = 0.3;     // 队列自动清理比例
 
+    private String registerAddress = "127.0.0.1:8080";
+
     private static MqServerConfig instance;
     static {
         try {
@@ -60,7 +62,11 @@ public class MqServerConfig {
         this.validMessageRatio = validMessageRatio;
     }
 
-    public static void setInstance(MqServerConfig instance) {
-        MqServerConfig.instance = instance;
+    public String getRegisterAddress() {
+        return registerAddress;
+    }
+
+    public void setRegisterAddress(String registerAddress) {
+        this.registerAddress = registerAddress;
     }
 }

@@ -1,6 +1,8 @@
 package com.hc.mq.server.core;
 
 import com.hc.mq.client.client.IMqService;
+import com.hc.mq.server.core.config.MqServerConfig;
+import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.provider.RpcProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +32,11 @@ public class Server {
     private static volatile boolean stopped = true;
 
     public Server init(String ip, int port) {
+        RpcConfig.getInstance().setServerPort(port);
         providerFactory.setServerHost(ip);
         providerFactory.setServerPort(port);
-        // providerFactory.setRegisterAddress();        // 注册中心todo
-        // providerFactory.setRegisterType();
+        providerFactory.setRegisterAddress(MqServerConfig.getInstance().getRegisterAddress());
+        // providerFactory.setRegisterType("admin");
         // brokerName
         providerFactory.addService(IMqService.class.getSimpleName(),"1.0", new MqServiceImpl());
 

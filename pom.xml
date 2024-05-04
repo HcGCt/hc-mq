@@ -12,6 +12,7 @@
         <module>hc-mq-server</module>
         <module>hc-mq-client</module>
         <module>hc-mq-test</module>
+        <module>hc-mq-dashboard</module>
     </modules>
 
     <properties>
@@ -25,6 +26,7 @@
         <mysql-connector-java.version>5.1.47</mysql-connector-java.version>
         <xxl-rpc.version>1.7.0</xxl-rpc.version>
         <spring.version>5.3.22</spring.version>
+        <httpclient.version>4.5.13</httpclient.version>
     </properties>
 
 </project>
