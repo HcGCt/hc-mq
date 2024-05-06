@@ -3,6 +3,7 @@ package com.hc.mq.client.config;
 
 import com.hc.rpc.utils.ConfigUtils;
 
+import static com.hc.mq.client.common.Constants.DEFAULT_BROKER;
 import static com.hc.mq.client.common.Constants.DEFAULT_CLIENT_CONFIG_PREFIX;
 
 
@@ -13,6 +14,7 @@ public class MqClientConfig {
     // 配置参数
     private String serverAddress = "127.0.0.1:9090";
     private String registryAddress = "127.0.0.1:8080";
+    private String brokerName = DEFAULT_BROKER; // brokerName
 
     private static volatile MqClientConfig instance;
     private MqClientConfig(){}
@@ -37,5 +39,13 @@ public class MqClientConfig {
 
     public String getRegistryAddress() {
         return registryAddress;
+    }
+
+    public String getBrokerName() {
+        return brokerName;
+    }
+
+    public void setBrokerName(String brokerName) {
+        this.brokerName = brokerName;
     }
 }

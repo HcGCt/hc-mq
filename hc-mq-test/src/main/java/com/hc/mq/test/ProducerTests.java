@@ -26,14 +26,14 @@ public class ProducerTests {
         MqClientInitializer.getInstance().start();
 
         testSendSYN();
-        testSendCallback();
-        testSendASYN();
-        testSendTransactionMessage();
+        // testSendCallback();
+        // testSendASYN();
+        // testSendTransactionMessage();
 
 
-        while (!Thread.currentThread().isInterrupted()) {
-            TimeUnit.MINUTES.sleep(2);
-        }
+        // while (!Thread.currentThread().isInterrupted()) {
+        //     TimeUnit.MINUTES.sleep(2);
+        // }
 
 
         MqClientInitializer.getInstance().stop();
@@ -43,7 +43,7 @@ public class ProducerTests {
     public static void testSendSYN() {
         System.out.println("=========== sendSYN ===========");
         long start = System.currentTimeMillis();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 2; i++) {
             String msg = "test_msg_1_" + i;
             Message message = new Message("testTopic1", msg.getBytes(StandardCharsets.UTF_8));
             Producers.send(message, true);
@@ -63,6 +63,7 @@ public class ProducerTests {
     }
 
 
+    // todo 回调响应阻塞？
     private static void testSendCallback() {
 
         System.out.println("=========== sendCallback ===========");
@@ -73,11 +74,7 @@ public class ProducerTests {
             Producers.sendCallback(message, new SendCallback<SendResult>() {
                 @Override
                 public void onSuccess(SendResult result) {
-                    try {
-                        System.out.println("测试sendCallback成功, result:" + BinaryUtil.toObject(result.getPayload()));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    System.out.println("测试sendCallback成功" + "响应broker:" + result.getResponseBroker());
                 }
 
                 @Override

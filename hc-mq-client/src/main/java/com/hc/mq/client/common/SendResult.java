@@ -16,6 +16,8 @@ public class SendResult implements Serializable {
 
     private byte[] payload; // 响应负载
 
+    private String responseBroker;
+
     public SendResult() {
 
     }
@@ -36,6 +38,14 @@ public class SendResult implements Serializable {
         this.queueName = queueName;
         this.transactionId = transactionId;
         this.payload = payload;
+    }
+
+    public String getResponseBroker() {
+        return responseBroker;
+    }
+
+    public void setResponseBroker(String responseBroker) {
+        this.responseBroker = responseBroker;
     }
 
     public MessageTransformState getState() {

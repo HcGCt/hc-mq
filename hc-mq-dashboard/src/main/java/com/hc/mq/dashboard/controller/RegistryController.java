@@ -25,7 +25,10 @@ public class RegistryController {
 
     @PostMapping("/add")
     @ResponseBody
-    public String registry(@Param("key") String key, @Param("hashCode") Integer hashCode, @Param("info") String info) {
+    public String registry(@Param("key") String key,
+                           @Param("hashCode") Integer hashCode,
+                           @Param("brokerName") String brokerName,
+                           @Param("info") String info) {
         int add = registryService.add(key, hashCode, info);
         System.out.println("注册成功");
         return "ok";
@@ -49,7 +52,7 @@ public class RegistryController {
     public String heartbeat(@Param("key") String key, @Param("hashCode") Integer hashCode, @Param("info") String info) {
         Registry registry = registryService.getRegistryByHash(hashCode);
         if (registry == null) {
-            registryService.add(key,hashCode,info);
+            registryService.add(key, hashCode, info);
             return "ok";
         }
         registry.setUpdateTime(new Date());

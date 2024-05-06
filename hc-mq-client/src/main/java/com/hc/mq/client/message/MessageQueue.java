@@ -14,10 +14,10 @@ public class MessageQueue implements Comparable<MessageQueue>, Serializable {
     protected int queueId;
     // 主题
     protected String topic;
-    // todo
+    // 指定brokerName todo
     protected String brokerName;
     // 持久化存储
-    protected boolean durable = false;
+    protected boolean durable = true;
     // 无消费者自动删除队列
     protected boolean autoDelete = false;
 

@@ -24,22 +24,26 @@ import java.util.concurrent.TimeUnit;
  */
 public class MqRegistryCenter implements IRegistryCenter {
     private static Logger logger = LoggerFactory.getLogger(MqRegistryCenter.class);
-    private final String registerAddress;
+    protected final String registerAddress;
 
-    private final String registerUrl;
-    private final String unRegisterUrl;
-    private final String discoveryUrl;
-    private final String heartbeatUrl;
+    protected final String registerUrl;
+    protected final String unRegisterUrl;
+    protected final String discoveryUrl;
+    protected final String heartbeatUrl;
+    private String brokerName;              // 注册brokerName
 
     private Map<String, List<ProviderMeta>> brokerMetasCache;    // 服务注册信息本地缓存
 
-    private String UUID;
-    private Integer hashCode;
+    protected String UUID;
+    protected Integer hashCode;
+
     // TODO 消息同步
     public MqRegistryCenter() {
         // ConcurrentHashMap,避免并发问题
         brokerMetasCache = new ConcurrentHashMap<>();
-        hashCode = IpUtil.getIpPort(IpUtil.getLocalAddress().toString(), RpcConfig.getInstance().getServerPort()).hashCode();
+
+        brokerName = MqClientConfig.getInstance().getBrokerName();
+        hashCode = (IpUtil.getIpPort(IpUtil.getLocalAddress().toString(), RpcConfig.getInstance().getServerPort()) + brokerName).hashCode();
         UUID = UUIDUtils.createUUID16();
         registerAddress = MqClientConfig.getInstance().getRegistryAddress();
         /** http url */
@@ -66,7 +70,7 @@ public class MqRegistryCenter implements IRegistryCenter {
         }, delay, delay, TimeUnit.SECONDS);
     }
 
-    private ProviderMeta curBrokerInfo;
+    protected ProviderMeta curBrokerInfo;
 
     private void heartbeat() {
         final long delay = 10;  // 10s检测一次
@@ -99,8 +103,8 @@ public class MqRegistryCenter implements IRegistryCenter {
             params.put("hashCode", hashCode);
             String json = JsonUtil.convertObj2Json(providerMeta);
             params.put("info", json);
+            params.put("brokerName", brokerName);
             HttpUtil.doPost(registerUrl, params, null);
-            System.out.println("注册成功");
         } catch (Exception e) {
             logger.error("服务注册broker失败", e);
         }

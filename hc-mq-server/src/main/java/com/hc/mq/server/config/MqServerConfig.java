@@ -1,6 +1,9 @@
-package com.hc.mq.server.core.config;
+package com.hc.mq.server.config;
 
+import com.hc.mq.client.config.MqClientConfig;
 import com.hc.rpc.utils.ConfigUtils;
+
+import static com.hc.mq.client.common.Constants.DEFAULT_BROKER;
 
 
 /**
@@ -15,12 +18,15 @@ public class MqServerConfig {
     private Integer maxMessages = 2000;             // 队列最大容量
     private Double validMessageRatio = 0.3;     // 队列自动清理比例
 
+    private String brokerName = DEFAULT_BROKER; // brokerName
+
     private String registerAddress = "127.0.0.1:8080";
 
     private static MqServerConfig instance;
     static {
         try {
             instance = ConfigUtils.loadConfig(MqServerConfig.class, DEFAULT_SERVER_CONFIG_PREFIX);
+            MqClientConfig.getInstance().setBrokerName(instance.brokerName);
         } catch (Exception e) {
             // 加载失败使用默认配置
             instance = new MqServerConfig();
@@ -68,5 +74,13 @@ public class MqServerConfig {
 
     public void setRegisterAddress(String registerAddress) {
         this.registerAddress = registerAddress;
+    }
+
+    public String getBrokerName() {
+        return brokerName;
+    }
+
+    public void setBrokerName(String brokerName) {
+        this.brokerName = brokerName;
     }
 }

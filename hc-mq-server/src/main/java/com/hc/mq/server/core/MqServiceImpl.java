@@ -8,7 +8,9 @@ import com.hc.mq.client.message.Message;
 import com.hc.mq.client.message.MessageQueue;
 import com.hc.mq.client.util.BinaryUtil;
 import com.hc.mq.client.util.UniqueIdGenerator;
+import com.hc.mq.server.config.MqServerConfig;
 import com.hc.mq.server.core.disk.DefaultMessageStore;
+import com.hc.mq.server.core.replication.ReplicateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +35,31 @@ public class MqServiceImpl implements IMqService {
 
     @Override
     public SendResult sendMessages(List<Message> messages) {
+        int count = addMessages(messages);
+        SendResult sendResult = new SendResult();
+        sendResult.setState(MessageTransformState.SEND_ERROR);
+        String brokerName = MqServerConfig.getInstance().getBrokerName();
+        System.out.println("响应brokerName:" + brokerName);
+        sendResult.setResponseBroker(brokerName);
+        // 集群节点消息复制，异步复制
+        waitStoreReplicateMessages.addAll(messages);
+        try {
+            if (count > 0) {
+                sendResult.setPayload(BinaryUtil.toByteArray(count));
+                sendResult.setState(MessageTransformState.SEND_OK);
+            }
+        } catch (Exception e) {
+            logger.error("设置SendResult错误");
+        }
+
+        return sendResult;
+    }
+
+    private int addMessages(List<Message> messages) {
         int count = 0;
         for (Message message : messages) {
+            if (messageIdSet.contains(message.getMsgId())) continue;
+            messageIdSet.add(message.getMsgId());
             String topic = message.getTopic();
             MessageQueue messageQueue = topicMqMap.computeIfAbsent(topic, k -> {
                 int queueId = UniqueIdGenerator.generateId();
@@ -51,23 +76,7 @@ public class MqServiceImpl implements IMqService {
                 logger.debug("消息Id: {} 持久化消息...", message.getMsgId());
             ++count;
         }
-        SendResult sendResult = new SendResult();
-        sendResult.setState(MessageTransformState.SEND_ERROR);
-        try {
-            if (count > 0) {
-                sendResult.setPayload(BinaryUtil.toByteArray(count));
-                sendResult.setState(MessageTransformState.SEND_OK);
-            }
-        } catch (Exception e) {
-            logger.error("设置SendResult错误");
-        }
-
-        return sendResult;
-    }
-
-    @Override
-    public SendResult callbackSendMessages(List<Message> messages) {
-        return null;
+        return count;
     }
 
     // ------------ send事务消息相关
@@ -83,6 +92,7 @@ public class MqServiceImpl implements IMqService {
             sendResult.setTransactionId(transactionId);
             sendResult.setState(MessageTransformState.SEND_OK);
             sendResult.setQueueName(transactionQueue.getQueueName());
+            sendResult.setResponseBroker(MqServerConfig.getInstance().getBrokerName());
             logger.info("已接收事务消息消息, 事务Id: {},暂添加至队列: {}", transactionId, transactionQueue.getQueueName());
         } catch (Exception e) {
             logger.error("接受事务消息发送错误", e);
@@ -96,7 +106,6 @@ public class MqServiceImpl implements IMqService {
     public void commitOrRollback(String transactionId, String brokerName, byte rollbackOrCommit) {
         switch (rollbackOrCommit) {
             case COMMIT_MESSAGE: {
-                System.out.println("test=======> 事务提交");
                 // 提交事务
                 LinkedBlockingQueue<Message> halfMessages = halfMessagesMap.get(transactionId);
                 waitDeleteHalfMessages.addAll(halfMessages);
@@ -118,6 +127,8 @@ public class MqServiceImpl implements IMqService {
                     }
                 }
                 halfMessagesMap.remove(transactionId);
+                // 集群节点消息复制，异步复制
+                waitStoreReplicateMessages.addAll(halfMessages);
             }
             break;
             case ROLLBACK_MESSAGE: {
@@ -140,19 +151,37 @@ public class MqServiceImpl implements IMqService {
         }
     }
 
+
+    ReplicateService replicateService = ReplicateService.getInstance();
+
     @Override
     public PullResult pullMessage(String topic, String group, int consumerCount) throws Exception {
         PullResult pullResult = new PullResult();
         try {
-            MessageQueue messageQueue = topicMqMap.get(topic);
-            LinkedBlockingQueue<Message> messages = queueMessageMap.get(messageQueue.getQueueName());
+            // MessageQueue messageQueue = topicMqMap.get(topic);
+            MessageQueue messageQueue = topicMqMap.computeIfAbsent(topic, k -> {
+                int queueId = UniqueIdGenerator.generateId();
+                return new MessageQueue(queueId, topic, true);
+            });
+            LinkedBlockingQueue<Message> messages = queueMessageMap.computeIfAbsent(messageQueue.getQueueName(), k -> new LinkedBlockingQueue<>());
             Message message = messages.take();
-            // messageMap.remove(message.getMsgId());
+            while (waitDeleteMessageIdSet.contains(message.getMsgId())) {
+                waitDeleteMessageIdSet.remove(message.getMsgId());
+                messageIdSet.remove(message.getMsgId());
+                message.setStored(true);
+                if (messageQueue.isDurable() && message.isStored()) {
+                    waitDeleteMessages.add(message);
+                }
+                message = messages.take();
+            }
+            messageIdSet.remove(message.getMsgId());
             if (messageQueue.isDurable() && message.isStored()) {
                 waitDeleteMessages.add(message);
             }
+            replicateService.deleteMessage(message.getMsgId());
             pullResult.setMessage(message);
             pullResult.setState(MessageTransformState.SEND_OK);
+            pullResult.setResponseBroker(MqServerConfig.getInstance().getBrokerName());
             logger.info("消息pull, topic: {}, group: {}, queue: {}, msgId:{}", topic, group, messageQueue.getQueueName(), message.getMsgId());
         } catch (Exception e) {
             pullResult.setState(MessageTransformState.SEND_ERROR);
@@ -161,4 +190,16 @@ public class MqServiceImpl implements IMqService {
     }
 
 
+    // TODO 异步复制 测试
+    @Override
+    public int replicateToStore(List<Message> messages) {
+        logger.info("复制push消息...");
+        return addMessages(messages);
+    }
+
+    @Override
+    public void replicateToDelete(String msgId) {
+        logger.info("复制pull消息...");
+        waitDeleteMessageIdSet.add(msgId);
+    }
 }

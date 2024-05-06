@@ -4,7 +4,7 @@ import com.hc.mq.client.common.MqException;
 import com.hc.mq.client.message.Message;
 import com.hc.mq.client.message.MessageQueue;
 import com.hc.mq.client.util.BinaryUtil;
-import com.hc.mq.server.core.config.MqServerConfig;
+import com.hc.mq.server.config.MqServerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,41 +28,49 @@ public class DefaultMessageStore implements IMessageStore {
     private double validMessageRatio;
 
     private static volatile DefaultMessageStore instance = new DefaultMessageStore();
-    private DefaultMessageStore(){
+
+    private DefaultMessageStore() {
         maxMessages = MqServerConfig.getInstance().getMaxMessages();
         validMessageRatio = MqServerConfig.getInstance().getValidMessageRatio();
     }
+
     public static DefaultMessageStore getInstance() {
         return instance;
     }
 
     @Override
-    public void createQueueFiles(String queueName) throws IOException {
+    public synchronized void createQueueFiles(String queueName) throws IOException {
         File queueDir = new File(getQueueDir(queueName));
         if (!queueDir.exists()) {
-            boolean made = queueDir.mkdirs();
-            if (!made) {
-                logger.error("创建目录失败: {}", queueDir.getAbsolutePath());
-                throw new IOException("创建目录失败: " +
-                        queueDir.getAbsolutePath());
+            synchronized (DefaultMessageStore.class) {
+                boolean made = queueDir.mkdirs();
+                if (!made) {
+                    logger.error("创建目录失败: {}", queueDir.getAbsolutePath());
+                    throw new IOException("创建目录失败: " +
+                            queueDir.getAbsolutePath());
+                }
             }
         }
         File dataPath = new File(getQueueDataPath(queueName));
         if (!dataPath.exists()) {
-            boolean created = dataPath.createNewFile();
-            if (!created) {
-                logger.error("创建data文件失败: {}", queueDir.getAbsolutePath());
-                throw new IOException("创建data文件失败: " +
-                        dataPath.getAbsolutePath());
+            synchronized (DefaultMessageStore.class) {
+                boolean created = dataPath.createNewFile();
+                if (!created) {
+                    logger.error("创建data文件失败: {}", queueDir.getAbsolutePath());
+                    throw new IOException("创建data文件失败: " +
+                            dataPath.getAbsolutePath());
+                }
             }
         }
         File statPath = new File(getQueueStatPath(queueName));
         if (!statPath.exists()) {
-            boolean created = statPath.createNewFile();
-            if (!created) {
-                logger.error("创建stat文件失败: {}", queueDir.getAbsolutePath());
-                throw new IOException("创建stat文件失败: " +
-                        statPath.getAbsolutePath());
+            synchronized (DefaultMessageStore.class) {
+                boolean created = statPath.createNewFile();
+                if (!created) {
+                    logger.error("创建stat文件失败: {}", queueDir.getAbsolutePath());
+                    throw new IOException("创建stat文件失败: " +
+                            statPath.getAbsolutePath());
+                }
             }
         }
         // 写入默认统计信息
@@ -225,7 +233,7 @@ public class DefaultMessageStore implements IMessageStore {
 
     @Override
     public String getQueueDir(String queueName) {
-        return DEFAULT_MESSAGE_STORE_PATH + queueName;
+        return DEFAULT_MESSAGE_STORE_PATH + MqServerConfig.getInstance().getBrokerName() + "/" + queueName;
     }
 
     @Override
@@ -263,7 +271,7 @@ public class DefaultMessageStore implements IMessageStore {
         return null;
     }
 
-    private boolean checkFileExists(String queueName) {
+    private synchronized boolean checkFileExists(String queueName) {
         return Files.exists(Paths.get(getQueueDir(queueName))) &&
                 Files.exists(Paths.get(getQueueDataPath(queueName))) &&
                 Files.exists(Paths.get(getQueueStatPath(queueName)));

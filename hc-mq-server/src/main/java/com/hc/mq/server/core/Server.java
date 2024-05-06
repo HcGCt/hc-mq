@@ -1,7 +1,7 @@
 package com.hc.mq.server.core;
 
 import com.hc.mq.client.client.IMqService;
-import com.hc.mq.server.core.config.MqServerConfig;
+import com.hc.mq.server.config.MqServerConfig;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.provider.RpcProviderFactory;
 import org.slf4j.Logger;
@@ -36,9 +36,7 @@ public class Server {
         providerFactory.setServerHost(ip);
         providerFactory.setServerPort(port);
         providerFactory.setRegisterAddress(MqServerConfig.getInstance().getRegisterAddress());
-        // providerFactory.setRegisterType("admin");
-        // brokerName
-        providerFactory.addService(IMqService.class.getSimpleName(),"1.0", new MqServiceImpl());
+        providerFactory.addService(IMqService.class.getSimpleName(), RpcConfig.getInstance().getVersion(), new MqServiceImpl());
 
         return this;
     }

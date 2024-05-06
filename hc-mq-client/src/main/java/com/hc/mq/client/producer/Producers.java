@@ -65,7 +65,7 @@ public class Producers {
     }
 
 
-    // TODO  事务相关
+    // 事务相关
     public static SendResult sendMessagesInTransaction(List<Message> messages, final TransactionListener transactionListener, Object arg) {
         if (transactionListener == null) {
             throw new MqException("本地事务监听器为null");

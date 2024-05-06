@@ -13,6 +13,8 @@ public class PullResult implements Serializable {
 
     private Message message;
 
+    private String responseBroker;
+
     public PullResult() {
 
     }
@@ -20,6 +22,20 @@ public class PullResult implements Serializable {
     public PullResult(MessageTransformState state, Message message) {
         this.state = state;
         this.message = message;
+    }
+
+    public PullResult(MessageTransformState state, Message message, String responseBroker) {
+        this.state = state;
+        this.message = message;
+        this.responseBroker = responseBroker;
+    }
+
+    public String getResponseBroker() {
+        return responseBroker;
+    }
+
+    public void setResponseBroker(String responseBroker) {
+        this.responseBroker = responseBroker;
     }
 
     public MessageTransformState getState() {

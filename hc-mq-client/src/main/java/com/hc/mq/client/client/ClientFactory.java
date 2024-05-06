@@ -1,11 +1,13 @@
 package com.hc.mq.client.client;
 
+import com.hc.mq.client.common.MqException;
 import com.hc.mq.client.common.PullResult;
 import com.hc.mq.client.common.SendResult;
 import com.hc.mq.client.consumer.IConsumer;
 import com.hc.mq.client.consumer.thread.PullMessageThread;
 import com.hc.mq.client.message.Message;
 import com.hc.mq.client.producer.SendCallback;
+import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.invoker.CallType;
 import com.hc.rpc.invoker.RpcInvokeCallback;
 import com.hc.rpc.invoker.RpcInvokerFactory;
@@ -31,7 +33,8 @@ public class ClientFactory {
     private String serverAddress;                       // 若确定serverAddress则不负载均衡
 
     // rpc 服务
-    private static IMqService client;                   // 远程服务接口
+    private static IMqService synClient;                   // 远程服务接口
+    private static IMqService callbackClient;                   // 远程服务接口
     private RpcInvokerFactory rpcInvokerFactory;
     private static RpcReferenceBean referenceBean;
 
@@ -43,16 +46,15 @@ public class ClientFactory {
     // 启动服务
     public void start() throws Exception {
         rpcInvokerFactory = RpcInvokerFactory.getInstance();
-
-        referenceBean = new RpcReferenceBean();
-        referenceBean.setCallType(CallType.SYNC);
-        // referenceBean.setService(IMqService.class);
-        referenceBean.setVersion("1.0");
-        referenceBean.setServerAddress(serverAddress);
-        referenceBean.setTimeout(30000000);     // todebug
-        referenceBean.setInvokeCallback(null);
         try {
-            client = referenceBean.getObject(IMqService.class);
+            RpcReferenceBean referenceBean = RpcInvokerFactory.createRpcReferenceBean(3000);
+            referenceBean.setVersion(RpcConfig.getInstance().getVersion());
+            referenceBean.setServerAddress(serverAddress);
+            synClient = referenceBean.getObject(IMqService.class);
+
+            referenceBean.setCallType(CallType.CALLBACK);
+            callbackClient = referenceBean.getObject(IMqService.class);
+
         } catch (Exception e) {
             logger.error("获取IClient失败：{}", e.getMessage());
             throw new RuntimeException(e);
@@ -87,7 +89,7 @@ public class ClientFactory {
 
         // 添加 消费者线程
         for (IConsumer consumer : consumerList) {
-            // 验证消费者 todo
+            // 验证消费者
             consumerThreads.add(new PullMessageThread(consumer));
         }
         if (consumerThreads.isEmpty()) {
@@ -119,7 +121,7 @@ public class ClientFactory {
      * 同步发送消息
      */
     public static void sendMessagesSYN(List<Message> messages) {
-        client.sendMessages(messages);
+        synClient.sendMessages(messages);
     }
 
     /**
@@ -138,11 +140,13 @@ public class ClientFactory {
                         Message message = tempMessageQueue.take();
                         // 批量发送
                         List<Message> messages = new ArrayList<>();
-                        int drain = tempMessageQueue.drainTo(messages, 100);
-                        if (drain <= 0) {
-                            messages.add(message);
+                        messages.add(message);
+                        List<Message> otherMessageList = new ArrayList<>();
+                        int drain = tempMessageQueue.drainTo(otherMessageList, 100);
+                        if (drain > 0) {
+                            messages.addAll(otherMessageList);
                         }
-                        client.sendMessages(messages);
+                        synClient.sendMessages(messages);
                     } catch (Exception e) {
                         if (!clientThreadPoolStopFlag) {
                             logger.error(e.getMessage(), e);
@@ -153,9 +157,8 @@ public class ClientFactory {
         }
     }
 
-
+    // todo bug 回调响应阻塞？
     public static void sendMessagesCallback(List<Message> messages, final SendCallback<SendResult> callback) {
-        referenceBean.setCallType(CallType.CALLBACK);
         RpcInvokeCallback.setCallback(new RpcInvokeCallback<SendResult>() {
             @Override
             public void onSuccess(SendResult result) {
@@ -167,24 +170,23 @@ public class ClientFactory {
                 callback.onException(throwable);
             }
         });
-        client.sendMessages(messages);
-        referenceBean.setCallType(CallType.SYNC);
+        callbackClient.sendMessages(messages);
     }
 
 
     public static SendResult sendHalfMessages(List<Message> messages, String transactionId) {
-        return client.sendHalfMessages(messages, transactionId);
+        return synClient.sendHalfMessages(messages, transactionId);
     }
 
     public static void commitOrRollback(String transactionId, String brokerName, byte rollbackOrCommit) {
-        client.commitOrRollback(transactionId, brokerName, rollbackOrCommit);
+        synClient.commitOrRollback(transactionId, brokerName, rollbackOrCommit);
     }
 
 
     // --------------- 消费者接口 ---------------
     // todo,异步拉取?
     public static Message pullMessage(String topic, String group, int consumerCount) throws Exception {
-        PullResult pullResult = client.pullMessage(topic, group, consumerCount);
+        PullResult pullResult = synClient.pullMessage(topic, group, consumerCount);
         Message message = pullResult.getMessage();
         return message;
     }
