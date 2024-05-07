@@ -16,6 +16,8 @@ import static com.hc.mq.client.common.Constants.TRANSACTION_TOPIC;
  * @Author hc
  */
 public class MemoData {
+    // TODO 重启加载磁盘存储的消息
+
     // key 队列名，value 队列对象
     public static Map<String, MessageQueue> queueMap = new ConcurrentHashMap<>();
     // key 主题，第二个 key 队列名

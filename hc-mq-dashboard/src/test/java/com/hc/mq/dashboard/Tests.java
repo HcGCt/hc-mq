@@ -1,7 +1,9 @@
 package com.hc.mq.dashboard;
 
+import com.hc.mq.client.message.Message;
 import com.hc.mq.dashboard.dao.IRegistryDao;
 import com.hc.mq.dashboard.entity.Registry;
+import com.hc.mq.dashboard.remoting.RemoteServerReference;
 import com.hc.mq.dashboard.service.IRegistryService;
 import com.hc.mq.client.util.JsonUtil;
 import com.hc.rpc.common.ProviderMeta;
@@ -56,13 +58,13 @@ public class Tests {
 
     @Test
     public void testAdd() {
-       String key = "test_key";
-       int hashCode = 124125;
-       ProviderMeta providerMeta = new ProviderMeta();
-       providerMeta.setUUID("2dasda");
-       providerMeta.setName("测试名");
-       providerMeta.setVersion("44.0");
-       providerMeta.setAddress("199912.42141924.421412");
+        String key = "test_key";
+        int hashCode = 124125;
+        ProviderMeta providerMeta = new ProviderMeta();
+        providerMeta.setUUID("2dasda");
+        providerMeta.setName("测试名");
+        providerMeta.setVersion("44.0");
+        providerMeta.setAddress("199912.42141924.421412");
         int add = registryService.add(key, hashCode, JsonUtil.convertObj2Json(providerMeta));
         System.out.println(add);
     }
@@ -73,5 +75,16 @@ public class Tests {
         Registry registryByHash = registryService.getRegistryByHash(hashcode);
         registryByHash.setRegistryKey("喜喜");
         registryService.update(registryByHash);
+    }
+
+
+    @Autowired
+    private RemoteServerReference remoteServerReference;
+
+    @Test
+    public void testGetMessageFromBroker() {
+        List<Message> messages = remoteServerReference.listMessagesByTopic("testTopic1");
+
+        messages.forEach(msg -> System.out.println(msg.getMsgId()));
     }
 }

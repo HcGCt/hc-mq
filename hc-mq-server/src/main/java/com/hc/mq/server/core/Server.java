@@ -1,7 +1,9 @@
 package com.hc.mq.server.core;
 
 import com.hc.mq.client.client.IMqService;
+import com.hc.mq.dashboard.remoting.DashboardService;
 import com.hc.mq.server.config.MqServerConfig;
+import com.hc.mq.server.dashboard.DashboardServiceImpl;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.provider.RpcProviderFactory;
 import org.slf4j.Logger;
@@ -38,6 +40,8 @@ public class Server {
         providerFactory.setRegisterAddress(MqServerConfig.getInstance().getRegisterAddress());
         providerFactory.addService(IMqService.class.getSimpleName(), RpcConfig.getInstance().getVersion(), new MqServiceImpl());
 
+        // todo dashboard service
+        providerFactory.addService(DashboardService.class.getSimpleName(), RpcConfig.getInstance().getVersion(),new DashboardServiceImpl());
         return this;
     }
 

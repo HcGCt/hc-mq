@@ -31,6 +31,12 @@
             <version>${parent.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.hc</groupId>
+            <artifactId>hc-mq-dashboard</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+
     </dependencies>
 
     <properties>

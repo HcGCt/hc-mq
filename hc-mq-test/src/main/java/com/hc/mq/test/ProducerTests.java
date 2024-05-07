@@ -43,7 +43,7 @@ public class ProducerTests {
     public static void testSendSYN() {
         System.out.println("=========== sendSYN ===========");
         long start = System.currentTimeMillis();
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 10; i++) {
             String msg = "test_msg_1_" + i;
             Message message = new Message("testTopic1", msg.getBytes(StandardCharsets.UTF_8));
             Producers.send(message, true);
