@@ -77,13 +77,14 @@ public class MqRegistryCenter implements IRegistryCenter {
     private void heartbeat() {
         final long delay = 10;  // 10s检测一次
         heartbeatExecutorService.scheduleWithFixedDelay(() -> {
-            for (ProviderMeta curBrokerInfo : serviceSet) {
-                if (curBrokerInfo != null) {
-                    String key = RpcStringUtil.buildProviderKey(curBrokerInfo.getName(), curBrokerInfo.getVersion());
+            for (ProviderMeta brokerInfo : serviceSet) {
+                if (brokerInfo != null) {
+                    String key = RpcStringUtil.buildProviderKey(brokerInfo.getName(), brokerInfo.getVersion());
                     Map<String, Object> params = new HashMap<>();
-                    String json = JsonUtil.convertObj2Json(curBrokerInfo);
+                    String json = JsonUtil.convertObj2Json(brokerInfo);
                     params.put("key", key);
-                    params.put("hashCode", hashCode);
+                    int hash = hashCode ^ brokerInfo.getName().hashCode();
+                    params.put("hashCode", hash);
                     params.put("info", json);
                     try {
                         HttpUtil.doPost(heartbeatUrl, params, null);

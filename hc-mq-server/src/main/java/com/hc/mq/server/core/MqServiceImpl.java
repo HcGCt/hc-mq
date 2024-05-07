@@ -39,7 +39,6 @@ public class MqServiceImpl implements IMqService {
         SendResult sendResult = new SendResult();
         sendResult.setState(MessageTransformState.SEND_ERROR);
         String brokerName = MqServerConfig.getInstance().getBrokerName();
-        System.out.println("响应brokerName:" + brokerName);
         sendResult.setResponseBroker(brokerName);
         // 集群节点消息复制，异步复制
         waitStoreReplicateMessages.addAll(messages);
