@@ -1,5 +1,6 @@
 package com.hc.mq.client.registry;
 
+import cn.hutool.core.collection.ConcurrentHashSet;
 import com.alibaba.fastjson.JSON;
 import com.hc.mq.client.config.MqClientConfig;
 import com.hc.mq.client.util.HttpUtil;
@@ -42,6 +43,7 @@ public class MqRegistryCenter implements IRegistryCenter {
         // ConcurrentHashMap,避免并发问题
         brokerMetasCache = new ConcurrentHashMap<>();
 
+        serviceSet = new ConcurrentHashSet<>();
         brokerName = MqClientConfig.getInstance().getBrokerName();
         hashCode = (IpUtil.getIpPort(IpUtil.getLocalAddress().toString(), RpcConfig.getInstance().getServerPort()) + brokerName).hashCode();
         UUID = UUIDUtils.createUUID16();
@@ -70,22 +72,24 @@ public class MqRegistryCenter implements IRegistryCenter {
         }, delay, delay, TimeUnit.SECONDS);
     }
 
-    protected ProviderMeta curBrokerInfo;
-
+    // ------------ 本地服务集合(hashcode表示,一个Server可以注册多个服务) ------------
+    protected Set<ProviderMeta> serviceSet;
     private void heartbeat() {
         final long delay = 10;  // 10s检测一次
         heartbeatExecutorService.scheduleWithFixedDelay(() -> {
-            if (curBrokerInfo != null) {
-                String key = RpcStringUtil.buildProviderKey(curBrokerInfo.getName(), curBrokerInfo.getVersion());
-                Map<String, Object> params = new HashMap<>();
-                String json = JsonUtil.convertObj2Json(curBrokerInfo);
-                params.put("key", key);
-                params.put("hashCode", hashCode);
-                params.put("info", json);
-                try {
-                    HttpUtil.doPost(heartbeatUrl, params, null);
-                } catch (Exception e) {
-                    logger.error("心跳监测失败", e);
+            for (ProviderMeta curBrokerInfo : serviceSet) {
+                if (curBrokerInfo != null) {
+                    String key = RpcStringUtil.buildProviderKey(curBrokerInfo.getName(), curBrokerInfo.getVersion());
+                    Map<String, Object> params = new HashMap<>();
+                    String json = JsonUtil.convertObj2Json(curBrokerInfo);
+                    params.put("key", key);
+                    params.put("hashCode", hashCode);
+                    params.put("info", json);
+                    try {
+                        HttpUtil.doPost(heartbeatUrl, params, null);
+                    } catch (Exception e) {
+                        logger.error("心跳监测失败", e);
+                    }
                 }
             }
         }, delay, delay, TimeUnit.SECONDS);
@@ -94,13 +98,15 @@ public class MqRegistryCenter implements IRegistryCenter {
 
     @Override
     public void register(ProviderMeta providerMeta) throws Exception {
-        curBrokerInfo = providerMeta;
-        String key = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
-        providerMeta.setUUID(UUID);
         try {
+            String serviceName = providerMeta.getName();
+            int hash = hashCode ^ serviceName.hashCode();
+            String key = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
+            providerMeta.setUUID(UUID);
+            serviceSet.add(providerMeta);
             Map<String, Object> params = new HashMap<>();
             params.put("key", key);
-            params.put("hashCode", hashCode);
+            params.put("hashCode", hash);
             String json = JsonUtil.convertObj2Json(providerMeta);
             params.put("info", json);
             params.put("brokerName", brokerName);
@@ -114,6 +120,7 @@ public class MqRegistryCenter implements IRegistryCenter {
     public void unRegister(ProviderMeta providerMeta) throws Exception {
         String key = RpcStringUtil.buildProviderKey(providerMeta.getName(), providerMeta.getVersion());
         try {
+            serviceSet.remove(providerMeta);
             Map<String, Object> params = new HashMap<>();
             params.put("key", key);
             String json = JsonUtil.convertObj2Json(providerMeta);
@@ -136,6 +143,8 @@ public class MqRegistryCenter implements IRegistryCenter {
     public void destroy() {
         heartbeatExecutorService.shutdown();
         updateExecutorService.shutdown();
+        brokerMetasCache.clear();
+        serviceSet.clear();
     }
 
 
