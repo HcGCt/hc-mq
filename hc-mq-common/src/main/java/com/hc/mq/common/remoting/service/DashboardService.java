@@ -1,7 +1,7 @@
-package com.hc.mq.dashboard.remoting;
+package com.hc.mq.common.remoting.service;
 
-import com.hc.mq.client.message.Message;
-import com.hc.mq.client.message.MessageQueue;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.message.MessageQueue;
 
 import java.util.List;
 

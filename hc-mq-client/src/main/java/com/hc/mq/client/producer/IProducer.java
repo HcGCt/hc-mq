@@ -1,7 +1,7 @@
 package com.hc.mq.client.producer;
 
 
-import com.hc.mq.client.message.Message;
+import com.hc.mq.common.message.Message;
 
 import java.util.List;
 

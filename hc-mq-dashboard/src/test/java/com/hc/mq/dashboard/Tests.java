@@ -1,11 +1,11 @@
 package com.hc.mq.dashboard;
 
-import com.hc.mq.client.message.Message;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.util.JsonUtil;
 import com.hc.mq.dashboard.dao.IRegistryDao;
 import com.hc.mq.dashboard.entity.Registry;
 import com.hc.mq.dashboard.remoting.RemoteServerReference;
 import com.hc.mq.dashboard.service.IRegistryService;
-import com.hc.mq.client.util.JsonUtil;
 import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.utils.UUIDUtils;
 import org.junit.jupiter.api.Test;
@@ -83,7 +83,7 @@ public class Tests {
 
     @Test
     public void testGetMessageFromBroker() {
-        List<Message> messages = remoteServerReference.listMessagesByTopic("testTopic1");
+        List<Message> messages = remoteServerReference.listMessagesByTopic("testTopic2");
 
         messages.forEach(msg -> System.out.println(msg.getMsgId()));
     }

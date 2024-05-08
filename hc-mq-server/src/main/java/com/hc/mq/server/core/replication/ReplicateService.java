@@ -1,9 +1,10 @@
 package com.hc.mq.server.core.replication;
 
-import com.hc.mq.client.client.IMqService;
-import com.hc.mq.client.common.MqException;
-import com.hc.mq.client.message.Message;
-import com.hc.mq.server.config.MqServerConfig;
+
+import com.hc.mq.common.comm.MqException;
+import com.hc.mq.common.config.MqServerConfig;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.remoting.service.IMqService;
 import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.invoker.RpcInvokerFactory;
@@ -33,12 +34,13 @@ public class ReplicateService {
     private final String localAddress;
 
     private static ReplicateService instance = new ReplicateService();
+
     public static ReplicateService getInstance() {
         return instance;
     }
 
     private ReplicateService() {
-        localAddress = IpUtil.getIpPort(IpUtil.getIp(), MqServerConfig.getInstance().getPort());
+        localAddress = IpUtil.getIpPort(MqServerConfig.getInstance().getIp() != null ? MqServerConfig.getInstance().getIp() : IpUtil.getIp(), MqServerConfig.getInstance().getPort());
         replicateExecutorService = Executors.newScheduledThreadPool(2);
         replicateReferenceBean = RpcInvokerFactory.createRpcReferenceBean(30000000);
     }
@@ -61,7 +63,8 @@ public class ReplicateService {
         // LinkedBlockingQueue<Message> waitReplicateMessages = store ? waitStoreReplicateMessages : waitDeleteReplicateMessages;
         try {
             // waitReplicateMessages 的size为空则会被阻塞
-            Message message = waitStoreReplicateMessages.take();
+            if (waitStoreReplicateMessages.isEmpty()) return;
+            Message message = waitStoreReplicateMessages.poll();
             List<Message> messages = new ArrayList<>();
             messages.add(message);
             List<Message> otherMessageList = new ArrayList<>();
@@ -69,7 +72,7 @@ public class ReplicateService {
             if (drain > 0) {
                 messages.addAll(otherMessageList);
             }
-            messages = messages.stream().map(msg->{
+            messages = messages.stream().map(msg -> {
                 Message newMessage = new Message(msg);
                 newMessage.setStored(!store);
                 return newMessage;

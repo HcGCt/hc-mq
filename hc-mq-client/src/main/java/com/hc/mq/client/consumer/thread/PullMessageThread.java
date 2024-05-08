@@ -3,7 +3,7 @@ package com.hc.mq.client.consumer.thread;
 import com.hc.mq.client.client.ClientFactory;
 import com.hc.mq.client.consumer.IConsumer;
 import com.hc.mq.client.consumer.annotation.Consumer;
-import com.hc.mq.client.message.Message;
+import com.hc.mq.common.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

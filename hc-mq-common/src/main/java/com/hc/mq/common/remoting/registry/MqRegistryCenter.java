@@ -1,10 +1,9 @@
-package com.hc.mq.client.registry;
+package com.hc.mq.common.remoting.registry;
 
 import cn.hutool.core.collection.ConcurrentHashSet;
-import com.alibaba.fastjson.JSON;
-import com.hc.mq.client.config.MqClientConfig;
-import com.hc.mq.client.util.HttpUtil;
-import com.hc.mq.client.util.JsonUtil;
+import com.hc.mq.common.config.MqClientConfig;
+import com.hc.mq.common.util.HttpUtil;
+import com.hc.mq.common.util.JsonUtil;
 import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.registry.IRegistryCenter;
@@ -14,7 +13,10 @@ import com.hc.rpc.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -73,7 +75,7 @@ public class MqRegistryCenter implements IRegistryCenter {
     }
 
     // ------------ 本地服务集合(hashcode表示,一个Server可以注册多个服务) ------------
-    protected Set<ProviderMeta> serviceSet;
+    public static Set<ProviderMeta> serviceSet;
     private void heartbeat() {
         final long delay = 10;  // 10s检测一次
         heartbeatExecutorService.scheduleWithFixedDelay(() -> {

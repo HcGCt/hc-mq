@@ -1,14 +1,17 @@
 package com.hc.mq.test;
 
-import com.hc.mq.client.common.LocalTransactionState;
-import com.hc.mq.client.common.SendResult;
-import com.hc.mq.client.config.MqClientConfig;
+// import com.hc.mq.client.common.LocalTransactionState;
+// import com.hc.mq.client.common.SendResult;
+// import com.hc.mq.client.config.MqClientConfig;
 import com.hc.mq.client.config.MqClientInitializer;
-import com.hc.mq.client.message.Message;
+// import com.hc.mq.client.message.Message;
 import com.hc.mq.client.producer.Producers;
 import com.hc.mq.client.producer.SendCallback;
 import com.hc.mq.client.producer.transaction.TransactionListener;
-import com.hc.mq.client.util.BinaryUtil;
+// import com.hc.mq.client.util.BinaryUtil;
+import com.hc.mq.common.comm.LocalTransactionState;
+import com.hc.mq.common.comm.SendResult;
+import com.hc.mq.common.message.Message;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,9 +29,9 @@ public class ProducerTests {
         MqClientInitializer.getInstance().start();
 
         testSendSYN();
-        // testSendCallback();
-        // testSendASYN();
-        // testSendTransactionMessage();
+        testSendCallback();
+        testSendASYN();
+        testSendTransactionMessage();
 
 
         // while (!Thread.currentThread().isInterrupted()) {
@@ -54,7 +57,7 @@ public class ProducerTests {
     public static void testSendASYN() {
         System.out.println("=========== sendASYN ===========");
         long start = System.currentTimeMillis();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             String msg = "test_msg_2_" + i;
             Message message = new Message("testTopic2", msg.getBytes(StandardCharsets.UTF_8));
             Producers.send(message, false);
@@ -68,7 +71,7 @@ public class ProducerTests {
 
         System.out.println("=========== sendCallback ===========");
         long start = System.currentTimeMillis();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             String msg = "test_msg_3_" + i;
             Message message = new Message("testTopic2", msg.getBytes(StandardCharsets.UTF_8));
             Producers.sendCallback(message, new SendCallback<SendResult>() {

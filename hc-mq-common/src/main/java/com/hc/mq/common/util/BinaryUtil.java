@@ -1,4 +1,4 @@
-package com.hc.mq.client.util;
+package com.hc.mq.common.util;
 
 import java.io.*;
 

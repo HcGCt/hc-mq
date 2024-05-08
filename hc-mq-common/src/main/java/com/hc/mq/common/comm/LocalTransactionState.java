@@ -1,4 +1,4 @@
-package com.hc.mq.client.common;
+package com.hc.mq.common.comm;
 
 import java.io.Serializable;
 

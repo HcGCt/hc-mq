@@ -1,8 +1,11 @@
 package com.hc.mq.rpctest.client.invoker;
 
-import com.hc.mq.client.client.IMqService;
-import com.hc.mq.client.common.SendResult;
-import com.hc.mq.client.message.Message;
+// import com.hc.mq.client.client.IMqService;
+// import com.hc.mq.client.common.SendResult;
+// import com.hc.mq.client.message.Message;
+import com.hc.mq.common.comm.SendResult;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.remoting.service.IMqService;
 import com.hc.mq.rpctest.client.dto.Student;
 import com.hc.mq.rpctest.client.service.DemoService;
 import com.hc.rpc.invoker.CallType;

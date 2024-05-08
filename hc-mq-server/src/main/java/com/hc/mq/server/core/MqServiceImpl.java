@@ -1,23 +1,24 @@
 package com.hc.mq.server.core;
 
-import com.hc.mq.client.client.IMqService;
-import com.hc.mq.client.common.MessageTransformState;
-import com.hc.mq.client.common.PullResult;
-import com.hc.mq.client.common.SendResult;
-import com.hc.mq.client.message.Message;
-import com.hc.mq.client.message.MessageQueue;
-import com.hc.mq.client.util.BinaryUtil;
-import com.hc.mq.client.util.UniqueIdGenerator;
-import com.hc.mq.server.config.MqServerConfig;
+import com.hc.mq.common.comm.MessageTransformState;
+import com.hc.mq.common.comm.PullResult;
+import com.hc.mq.common.comm.SendResult;
+import com.hc.mq.common.config.MqServerConfig;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.message.MessageQueue;
+import com.hc.mq.common.remoting.service.IMqService;
+import com.hc.mq.common.util.BinaryUtil;
+import com.hc.mq.common.util.UniqueIdGenerator;
 import com.hc.mq.server.core.disk.DefaultMessageStore;
 import com.hc.mq.server.core.replication.ReplicateService;
+import com.hc.rpc.utils.IpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.hc.mq.client.common.Constants.*;
+import static com.hc.mq.common.comm.Constants.*;
 import static com.hc.mq.server.core.memo.MemoData.*;
 
 /**
@@ -38,8 +39,8 @@ public class MqServiceImpl implements IMqService {
         int count = addMessages(messages);
         SendResult sendResult = new SendResult();
         sendResult.setState(MessageTransformState.SEND_ERROR);
-        String brokerName = MqServerConfig.getInstance().getBrokerName();
-        sendResult.setResponseBroker(brokerName);
+        String brokerAddress = IpUtil.getIpPort(MqServerConfig.getInstance().getIp(), MqServerConfig.getInstance().getPort());
+        sendResult.setResponseBroker(brokerAddress);
         // 集群节点消息复制，异步复制
         waitStoreReplicateMessages.addAll(messages);
         try {
@@ -78,7 +79,7 @@ public class MqServiceImpl implements IMqService {
         return count;
     }
 
-    // ------------ send事务消息相关
+    // ------------ send事务消息相关 ------------
     @Override
     public SendResult sendHalfMessages(List<Message> messages, String transactionId) {
         SendResult sendResult = new SendResult();
@@ -91,22 +92,25 @@ public class MqServiceImpl implements IMqService {
             sendResult.setTransactionId(transactionId);
             sendResult.setState(MessageTransformState.SEND_OK);
             sendResult.setQueueName(transactionQueue.getQueueName());
-            sendResult.setResponseBroker(MqServerConfig.getInstance().getBrokerName());
+            String brokerAddress = IpUtil.getIpPort(MqServerConfig.getInstance().getIp(), MqServerConfig.getInstance().getPort());
+            sendResult.setResponseBroker(brokerAddress);
             logger.info("已接收事务消息消息, 事务Id: {},暂添加至队列: {}", transactionId, transactionQueue.getQueueName());
         } catch (Exception e) {
             logger.error("接受事务消息发送错误", e);
             sendResult.setState(MessageTransformState.SEND_ERROR);
         }
-
+        // todo 半事务消息不复制？
         return sendResult;
     }
 
     @Override
-    public void commitOrRollback(String transactionId, String brokerName, byte rollbackOrCommit) {
+    public void commitOrRollback(String transactionId, byte rollbackOrCommit) {
         switch (rollbackOrCommit) {
             case COMMIT_MESSAGE: {
                 // 提交事务
                 LinkedBlockingQueue<Message> halfMessages = halfMessagesMap.get(transactionId);
+                // 集群节点消息复制，异步复制
+                waitStoreReplicateMessages.addAll(halfMessages);
                 waitDeleteHalfMessages.addAll(halfMessages);
                 while (!halfMessages.isEmpty()) {
                     try {
@@ -126,8 +130,6 @@ public class MqServiceImpl implements IMqService {
                     }
                 }
                 halfMessagesMap.remove(transactionId);
-                // 集群节点消息复制，异步复制
-                waitStoreReplicateMessages.addAll(halfMessages);
             }
             break;
             case ROLLBACK_MESSAGE: {

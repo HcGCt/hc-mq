@@ -1,8 +1,8 @@
 package com.hc.mq.server.core;
 
-import com.hc.mq.client.client.IMqService;
-import com.hc.mq.dashboard.remoting.DashboardService;
-import com.hc.mq.server.config.MqServerConfig;
+import com.hc.mq.common.config.MqServerConfig;
+import com.hc.mq.common.remoting.service.DashboardService;
+import com.hc.mq.common.remoting.service.IMqService;
 import com.hc.mq.server.dashboard.DashboardServiceImpl;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.provider.RpcProviderFactory;

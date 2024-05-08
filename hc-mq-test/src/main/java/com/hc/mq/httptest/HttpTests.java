@@ -1,7 +1,9 @@
 package com.hc.mq.httptest;
 
-import com.hc.mq.client.util.HttpUtil;
-import com.hc.mq.client.util.JsonUtil;
+// import com.hc.mq.client.util.HttpUtil;
+// import com.hc.mq.client.util.JsonUtil;
+import com.hc.mq.common.util.HttpUtil;
+import com.hc.mq.common.util.JsonUtil;
 import com.hc.rpc.common.ProviderMeta;
 import com.hc.rpc.utils.RpcStringUtil;
 

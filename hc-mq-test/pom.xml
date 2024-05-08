@@ -22,6 +22,11 @@
             <artifactId>hc-mq-server</artifactId>
             <version>${parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.hc</groupId>
+            <artifactId>hc-mq-client</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 </project>

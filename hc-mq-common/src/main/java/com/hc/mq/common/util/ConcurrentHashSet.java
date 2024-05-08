@@ -1,4 +1,4 @@
-package com.hc.mq.server.util;
+package com.hc.mq.common.util;
 
 import java.io.Serializable;
 import java.util.AbstractSet;

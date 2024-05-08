@@ -1,8 +1,8 @@
-package com.hc.mq.client.client;
+package com.hc.mq.common.remoting.service;
 
-import com.hc.mq.client.common.PullResult;
-import com.hc.mq.client.common.SendResult;
-import com.hc.mq.client.message.Message;
+import com.hc.mq.common.comm.PullResult;
+import com.hc.mq.common.comm.SendResult;
+import com.hc.mq.common.message.Message;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ public interface IMqService {
 
     SendResult sendHalfMessages(List<Message> messages, String transactionId);
 
-    void commitOrRollback(String transactionId, String brokerName, byte rollbackOrCommit);
+    void commitOrRollback(String transactionId, byte rollbackOrCommit);
     /**
      * 拉取消息
      */

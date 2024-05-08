@@ -2,7 +2,7 @@ package com.hc.mq.client.consumer.annotation;
 
 import java.lang.annotation.*;
 
-import static com.hc.mq.client.common.Constants.DEFAULT_GROUP;
+import static com.hc.mq.common.comm.Constants.DEFAULT_GROUP;
 
 
 /**

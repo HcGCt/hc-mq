@@ -1,8 +1,8 @@
 package com.hc.mq.server.core.disk;
 
-import com.hc.mq.client.common.MqException;
-import com.hc.mq.client.message.Message;
-import com.hc.mq.client.message.MessageQueue;
+import com.hc.mq.common.comm.MqException;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.message.MessageQueue;
 
 import java.io.IOException;
 import java.util.List;

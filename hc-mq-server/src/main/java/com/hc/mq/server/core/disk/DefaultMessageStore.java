@@ -1,10 +1,10 @@
 package com.hc.mq.server.core.disk;
 
-import com.hc.mq.client.common.MqException;
-import com.hc.mq.client.message.Message;
-import com.hc.mq.client.message.MessageQueue;
-import com.hc.mq.client.util.BinaryUtil;
-import com.hc.mq.server.config.MqServerConfig;
+import com.hc.mq.common.comm.MqException;
+import com.hc.mq.common.config.MqServerConfig;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.message.MessageQueue;
+import com.hc.mq.common.util.BinaryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import static com.hc.mq.client.common.Constants.*;
+import static com.hc.mq.common.comm.Constants.*;
 
 /**
  * @Author hc

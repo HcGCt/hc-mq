@@ -1,6 +1,6 @@
 package com.hc.mq.rpctest.server.provider;
 
-import com.hc.mq.client.client.IMqService;
+// import com.hc.mq.client.client.IMqService;
 import com.hc.mq.rpctest.client.service.DemoService;
 import com.hc.mq.rpctest.client.service.DemoService2;
 import com.hc.mq.rpctest.server.impl.DemoService2Impl;

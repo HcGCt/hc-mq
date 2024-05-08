@@ -1,4 +1,4 @@
-package com.hc.mq.client.common;
+package com.hc.mq.common.comm;
 
 /**
  * @Author hc
@@ -26,5 +26,6 @@ public class Constants {
 
 
     public static final String DEFAULT_CLIENT_CONFIG_PREFIX = "hc.mq.client";
+    public static final String DEFAULT_SERVER_CONFIG_PREFIX = "hc.mq.server";
 
 }

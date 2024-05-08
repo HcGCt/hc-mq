@@ -1,18 +1,18 @@
 package com.hc.mq.client.client;
 
-import com.hc.mq.client.common.MqException;
-import com.hc.mq.client.common.PullResult;
-import com.hc.mq.client.common.SendResult;
 import com.hc.mq.client.consumer.IConsumer;
 import com.hc.mq.client.consumer.thread.PullMessageThread;
-import com.hc.mq.client.message.Message;
 import com.hc.mq.client.producer.SendCallback;
+import com.hc.mq.common.comm.MqException;
+import com.hc.mq.common.comm.PullResult;
+import com.hc.mq.common.comm.SendResult;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.remoting.service.IMqService;
 import com.hc.rpc.config.RpcConfig;
 import com.hc.rpc.invoker.CallType;
 import com.hc.rpc.invoker.RpcInvokeCallback;
 import com.hc.rpc.invoker.RpcInvokerFactory;
 import com.hc.rpc.invoker.RpcReferenceBean;
-import com.hc.rpc.protocol.serialize.HessianSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,8 @@ public class ClientFactory {
     private static IMqService synClient;                   // 远程服务接口
     private static IMqService callbackClient;                   // 远程服务接口
     private RpcInvokerFactory rpcInvokerFactory;
-    private static RpcReferenceBean referenceBean;
+    public static RpcReferenceBean directedReferenceBean;
+    private static IMqService directedClient;      // 定向远程服务接口
 
     // 线程池
     private ExecutorService clientThreadPool = Executors.newCachedThreadPool();
@@ -54,6 +55,9 @@ public class ClientFactory {
 
             referenceBean.setCallType(CallType.CALLBACK);
             callbackClient = referenceBean.getObject(IMqService.class);
+
+            directedReferenceBean = RpcInvokerFactory.createRpcReferenceBean(3000);
+            directedReferenceBean.setServerAddress(serverAddress);
 
         } catch (Exception e) {
             logger.error("获取IClient失败：{}", e.getMessage());
@@ -178,8 +182,16 @@ public class ClientFactory {
         return synClient.sendHalfMessages(messages, transactionId);
     }
 
-    public static void commitOrRollback(String transactionId, String brokerName, byte rollbackOrCommit) {
-        synClient.commitOrRollback(transactionId, brokerName, rollbackOrCommit);
+    public static void commitOrRollback(String transactionId, String brokerAddress, byte rollbackOrCommit) {
+        directedReferenceBean.setServerAddress(brokerAddress);
+        try {
+            directedClient = directedReferenceBean.getObject(IMqService.class);
+        } catch (Exception e) {
+            throw new MqException(e);
+        }
+        directedReferenceBean.setCallType(CallType.CALLBACK);
+        directedClient.commitOrRollback(transactionId, rollbackOrCommit);
+        // synClient.commitOrRollback(transactionId, brokerName, rollbackOrCommit);
     }
 
 

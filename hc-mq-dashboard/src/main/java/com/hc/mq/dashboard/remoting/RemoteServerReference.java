@@ -1,7 +1,8 @@
 package com.hc.mq.dashboard.remoting;
 
-import com.hc.mq.client.message.Message;
-import com.hc.mq.client.message.MessageQueue;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.message.MessageQueue;
+import com.hc.mq.common.remoting.service.DashboardService;
 import com.hc.rpc.invoker.RpcInvokerFactory;
 import com.hc.rpc.invoker.RpcReferenceBean;
 import org.slf4j.Logger;

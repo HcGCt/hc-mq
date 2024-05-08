@@ -1,12 +1,12 @@
 package com.hc.mq.client.producer;
 
 import com.hc.mq.client.client.ClientFactory;
-import com.hc.mq.client.common.LocalTransactionState;
-import com.hc.mq.client.common.MessageTransformState;
-import com.hc.mq.client.common.MqException;
-import com.hc.mq.client.common.SendResult;
-import com.hc.mq.client.message.Message;
 import com.hc.mq.client.producer.transaction.TransactionListener;
+import com.hc.mq.common.comm.LocalTransactionState;
+import com.hc.mq.common.comm.MessageTransformState;
+import com.hc.mq.common.comm.MqException;
+import com.hc.mq.common.comm.SendResult;
+import com.hc.mq.common.message.Message;
 import com.hc.rpc.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.hc.mq.client.common.Constants.*;
+import static com.hc.mq.common.comm.Constants.*;
+
 
 /**
  * @Author hc
@@ -129,7 +130,7 @@ public class Producers {
             default:
                 break;
         }
-        ClientFactory.commitOrRollback(transactionId, null, rc);
+        ClientFactory.commitOrRollback(transactionId, sendResult.getResponseBroker(), rc);
     }
 
 

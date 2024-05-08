@@ -31,8 +31,8 @@
     <dependencies>
         <dependency>
             <groupId>com.hc</groupId>
-            <artifactId>hc-mq-client</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <artifactId>hc-mq-common</artifactId>
+            <version>${parent.version}</version>
         </dependency>
 
         <!-- starter-web spring-webmvc + autoconfigure + logback + yaml + tomcat -->

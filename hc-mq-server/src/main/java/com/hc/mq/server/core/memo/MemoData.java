@@ -1,16 +1,16 @@
 package com.hc.mq.server.core.memo;
 
 
-import com.hc.mq.client.message.Message;
-import com.hc.mq.client.message.MessageQueue;
-import com.hc.mq.server.util.ConcurrentHashSet;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.message.MessageQueue;
+import com.hc.mq.common.util.ConcurrentHashSet;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.hc.mq.client.common.Constants.TRANSACTION_TOPIC;
+import static com.hc.mq.common.comm.Constants.TRANSACTION_TOPIC;
 
 /**
  * @Author hc

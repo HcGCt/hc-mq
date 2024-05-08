@@ -1,11 +1,11 @@
 package com.hc.mq.server.dashboard;
 
-import com.hc.mq.client.message.Message;
-import com.hc.mq.client.message.MessageQueue;
-import com.hc.mq.dashboard.remoting.DashboardService;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.message.MessageQueue;
+import com.hc.mq.common.remoting.service.DashboardService;
+
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;

@@ -1,8 +1,8 @@
 package com.hc.mq.server.core;
 
-import com.hc.mq.client.message.Message;
-import com.hc.mq.client.message.MessageQueue;
-import com.hc.mq.server.config.MqServerConfig;
+import com.hc.mq.common.config.MqServerConfig;
+import com.hc.mq.common.message.Message;
+import com.hc.mq.common.message.MessageQueue;
 import com.hc.mq.server.core.disk.DefaultMessageStore;
 import com.hc.mq.server.core.replication.ReplicateService;
 import org.slf4j.Logger;

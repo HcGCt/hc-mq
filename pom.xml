@@ -13,6 +13,7 @@
         <module>hc-mq-client</module>
         <module>hc-mq-test</module>
         <module>hc-mq-dashboard</module>
+        <module>hc-mq-common</module>
     </modules>
 
     <properties>
