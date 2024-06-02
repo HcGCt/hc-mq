@@ -35,6 +35,7 @@ public class PullMessageThread extends Thread {
                 // todo 暂不考虑消费组
                 Message message = ClientFactory.pullMessage(topic, group, 1);
                 boolean consume = consumer.consume(message);
+                // todo 消息超时控制
                 logger.info("消费消息成功: {}", consume);
             } catch (Exception e) {
 
