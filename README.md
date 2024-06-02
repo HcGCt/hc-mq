@@ -1,49 +1,40 @@
-# 1.项目设计
+# hc-mq
 
-## 1.1 核心模块
+一个简单的轻量级消息队列，通信基于[hc-rpc](https://github.com/HcGCt/hc-rpc)，做这个项目是为了更好理解消息队列原理
 
-- **生产者producer**
+## 目录
 
-  行为：发布publish
+```
+|—— hc-mq-common: 公共包，包括公共实体类、工具类、通信接口
+|—— hc-mq-client: 客户端，包括生产者与消费者
+	|—— client: 客户端远程调用相关
+	|—— config: 客户端配置
+	|—— consumer: 消费者，采用多线程轮询pull方式拉取消息
+		|—— annotation: 注解标识消费者
+		|—— thread: 消费线程
+	|—— producer: 生产者
+		|—— transaction: 事务监听器
+		|—— Producers: push消息的相关接口
+|—— hc-mq-server: 服务端
+	|—— core
+		|—— disk: 消息持久化逻辑，异步持久化
+		|—— memo: 消息内存存储
+		|—— replication: 多节点间消息复制逻辑
+		|—— Broker: broker实例
+		|—— MqServiceImpl: 通信接口实现类
+|—— hc-mq-dashboard: 消息中心面板todo,内置注册中心
+|—— hc-mq-test: demo与测试
+```
 
-- **消费者comsumer**
+## 设计
 
-  行为：订阅subsribe
+### 消息持久化
 
-- **服务代理broker**
+可指定消息是否持久化，消息持久化以队列为单位，主要两个文件：
 
-CS模式，其中client包括producer与comsumer，server即broker，响应生产者/消费者请求。
+- queue_data：消息二进制顺序写入
 
-消费者消费消息的模式包括两种：
-
-- 推push：broker向消费者推送消息
-- 拉pull：消费者向broker拉取消息
-
-kafka消费消息为pull；rocketMQ支持push与pull
-
-**实现拉模式**
-
-### 1.2 核心概念
-
-- Message：消息实体
-- Topic：消息主题
-- MessageQueue：一个topic可设置多个队列，是消息存储的实体
-- comsumer
-- comsumer group
-- producer
-- broker
-
-## 1.2 Message设计
-
-## 1.3 持久化存储
-
-消息存于内存中（即MessageQueue中），持久化存储采用关系型数据库（for dashboard todo）+文件形式
-
-数据用于管理中心队列主题增删改查等
-
-文件存储消息：
-
-- 消息数据queue_data，二进制存储，结构如下
+  消息结构如下
 
   ```
     4 字节				 30 字节
@@ -54,66 +45,37 @@ kafka消费消息为pull；rocketMQ支持push与pull
 
   消息之间直接相连，使用序列化转为Message对象，消息偏移量为**消息体起始、末尾偏移量**
 
-- 消息统计信息queue_stat.txt
+- queue_stat：消息统计信息
 
-## 1.5 rpc通信
+### 消息生产者
 
-[自定义rpc通信](https://github.com/HcGCt/hc-rpc)：
+- 同步发送
 
-rpc组件设计如下：
-![](https://cccblogimgs.oss-cn-hangzhou.aliyuncs.com/rpc%E6%9E%B6%E6%9E%84.png)
+  `sendMessagesSYN`，RPC同步invoke
 
-模块组成如下：
+- oneway（单向消息）
 
-- loadbalance:负载均衡策略
-- protocol:协议层，定义消息传输的格式等
-- invoker:服务调用方,异步调用
-- provider:服务提供方
-- registry:注册中心
-- SPI：允许在运行时动态地加载实现特定接口的类，而不需要在代码中显式地指定该类，从而实现解耦和灵活性。实现高效的组件化和模块化，提高组件的扩展性。
+  `sendMessagesASYN`，消息添加到队列，后台线程池异步发送（oneway形式）
 
-## 1.6 模块划分
+- 异步发送（回调）
 
-- 服务端：broker
-    - 内存管理：队列与消息存储
-    - 持久化：
-        - 数据库：
-            - 主题存储
-            - 队列存储
-        - 文件：
-            - 消息内存存储
-            - 消息统计信息
-            - 垃圾信息
-    - 消息转发todo
-    - API
-- 客户端：producer与consumer
-    - 连接管理
-    - 网络通信
-- 公共：
-    - rpc通信组件
-    - 序列化与反序列化
+  `sendCallback`，RPC的callback形式调用，RPC组件有一个专门线程池responseCallbackThreadPool处理回调结果
 
-# 2. Send message
+- 发送事务消息
 
-1. 同步发送
+  `sendMessagesInTransaction`
 
-   sendMessagesSYN，RPC同步invoke
+  事务消息参考RocketMQ实现 ：本地事务+消息事务
 
-2. oneway（单向消息）
+  1. 发送半消息，获取半消息发送的结果result，半消息不会存于真正主题的队列中，而是一个临时队列，不会被消费者消费
+  2. 若半消息成功发送，执行本地事务
+  3. 根据本地事务执行结果，判断此消息是否回滚，由于消息发送成功才会执行本地事务，因此不需考虑本地事务的回滚
 
-   sendMessagesASYN，消息添加到队列，后台线程池异步发送（oneway形式）
+  本地事务在`TransactionListener`中执行
 
-3. 异步发送（回调）
+### 消息消费者
 
-   sendCallback，RPC的callback形式调用，RPC组件有一个专门线程池responseCallbackThreadPool处理回调结果
-
-4. 发送事务消息
-
-   sendMessagesInTransaction，参考rocketmq。首先发送半消息，发送成功后由transactionListener执行本地事务，根据半消息发送结果与本地事务执行状态
-
-# 3. Pull message
-
-消费者消费消息模式是拉模式。通过**多线程轮询**的方式实现
+消费者消费消息模式本质上是拉模式。通过**多线程轮询**的方式实现。
 
 ```java
 for (PullMessageThread thread : consumerThreads) {
@@ -121,14 +83,92 @@ for (PullMessageThread thread : consumerThreads) {
 }
 ```
 
-# 4. 事务消息
 
-已经支持批量发送消息：`public static void send(List<Message> messages, boolean syn)(...)`
 
-所以事务消息参考RocketMQ实现 ：本地事务+消息事务
+## 使用
 
-1. 发送半消息，获取半消息发送的结果result，半消息不会存于真正主题的队列中，而是一个临时队列，不会被消费者消费
-2. 若半消息成功发送，执行本地事务
-3. 根据本地事务执行结果，判断此消息是否回滚，由于消息发送成功才会执行本地事务，因此不需考虑本地事务的回滚
+- 部署启动broker，导入client依赖
 
-本地事务在`TransactionListener`中执行
+  broker支持水平扩展，可以提升消息系统容灾和可用性。
+
+- 消费者
+
+  实现`IConsumer`接口，`@Consumer`注解标识并指定topic即可，后台以轮询pull方式消费消息
+
+  ```java
+  @Consumer(topic = "testTopic1")
+  public class DemoConsumer1 implements IConsumer {
+      @Override
+      public boolean consume(Message message) {
+          logger.info("消费消息成功! 消息id: {}", message.getMsgId());
+          return true;
+      }
+  }
+  ```
+
+- 生产者
+
+  ```java
+  public static void main(String[] args) throws Exception {
+      // 启动客户端
+      MqClientInitializer.getInstance().start();
+      Message message = new Message("testTopic1", "msg_test".getBytes(StandardCharsets.UTF_8));
+      // 支持:同步、回调、单向、事务消息发生
+      // 同步
+      Producers.send(message, true);
+      // 单向
+      Producers.send(message, false);	// 单向发送
+      // 回调
+      Producers.sendCallback(message, new SendCallback<SendResult>() {
+                  @Override
+                  public void onSuccess(SendResult result) {
+  					// do something
+                  }
+                  @Override
+                  public void onException(Throwable e) {
+                      // do something
+                  }
+              });
+      // 事务消息
+      Producers.sendMessagesInTransaction(messages, new TransactionListener() {
+          @Override
+          public LocalTransactionState executeLocalTransaction(List<Message> msgs, Object arg) {
+              System.out.println("执行本地事务中+++++++++++");
+              return LocalTransactionState.COMMIT_MESSAGE;
+          }
+          @Override
+          public LocalTransactionState checkLocalTransaction(Message msg) {
+              return LocalTransactionState.COMMIT_MESSAGE;
+          }
+      }, null);
+  }
+  ```
+
+## todo list
+
+- [x] 消息生产模式
+  - [x] 同步发送
+  - [x] 回调发送
+  - [x] 单向发送
+  - [x] 事务消息
+  - [ ] ......
+- [x] 消息模式
+  - [x] 串行消息
+  - [ ] 延迟消息
+  - [ ] 并行消息
+  - [ ] 广播消息
+- [x] 注册中心
+  - [x] 内置注册中心
+  - [x] zookeeper
+  - [x] etcd
+  - [ ] ......
+- [x] 消息持久化
+  - [x] 异步持久化
+  - [ ] 同步持久化
+- [ ] 失败重试
+- [ ] 失败告警
+- [ ] 事务消费
+- [ ] 超时控制
+- [ ] 消息中心控制台
+- [ ] 消息可追踪
+- [ ] ......
