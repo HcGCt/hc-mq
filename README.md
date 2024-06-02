@@ -171,4 +171,5 @@ for (PullMessageThread thread : consumerThreads) {
 - [ ] 超时控制
 - [ ] 消息中心控制台
 - [ ] 消息可追踪
+- [ ] 高性能/可用集群
 - [ ] ......
